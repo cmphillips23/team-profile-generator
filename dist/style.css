@@ -1,0 +1,5 @@
+.card {
+    min-width: fit-content;
+    max-width: 35vw;
+    margin-top: 20px;
+}

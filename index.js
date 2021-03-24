@@ -1,12 +1,12 @@
-const fs = require('fs');
 const inquirer = require('inquirer');
+const { writeFile, copyFile } = require('./utils/generate-page.js');
 const Employee = require('./lib/Employee');
 const Manager = require('./lib/Manager');
 const Engineer = require('./lib/Engineer');
 const Intern = require('./lib/Intern');
-const { exit } = require('process');
+// const { exit } = require('process');
 
-var employeeArr = [];
+let employeeArr = [];
 
 const promptManager = () => {
     return inquirer.prompt([
@@ -68,17 +68,17 @@ const promptManager = () => {
             message: 'Would you like to add another employee, or finish building your team?',
             choices: ['Engineer', 'Intern', 'Finish building my team']
         },
-    ]).then(managerData => {
-        const manager = new Manager(managerData.name, managerData.id, managerData.email, managerData.office);
+    ]).then(employeeData => {
+        const manager = new Manager(employeeData.name, employeeData.id, employeeData.email, employeeData.office);
         employeeArr.push(manager);
         console.log(employeeArr);
 
-        if(managerData.role === 'Engineer') {
+        if(employeeData.role === 'Engineer') {
             return promptEngineer();
-        } else if (managerData.role === 'Intern') {
+        } else if (employeeData.role === 'Intern') {
             return promptIntern();
         } else {
-            return managerData;
+            return employeeData;
         }
     });
 };
@@ -143,17 +143,17 @@ const promptEngineer = () => {
             message: 'Would you like to add another employee, or finish building your team?',
             choices: ['Engineer', 'Intern', 'Finish building my team']
         },
-    ]).then(engineerData => {
-        const engineer = new Engineer(engineerData.name, engineerData.id, engineerData.email, engineerData.github);
+    ]).then(employeeData => {
+        const engineer = new Engineer(employeeData.name, employeeData.id, employeeData.email, employeeData.github);
         employeeArr.push(engineer);
         console.log(employeeArr);
 
-        if(engineerData.role === 'Engineer') {
+        if(employeeData.role === 'Engineer') {
             return promptEngineer();
-        } else if (engineerData.role === 'Intern') {
+        } else if (employeeData.role === 'Intern') {
             return promptIntern();
         } else {
-            return engineerData;
+            return employeeData;
         }
     });
 };
@@ -218,25 +218,113 @@ const promptIntern = () => {
             message: 'Would you like to add another employee, or finish building your team?',
             choices: ['Engineer', 'Intern', 'Finish building my team']
         },
-    ]).then(internData => {
-        const intern = new Intern(internData.name, internData.id, internData.email, internData.school);
+    ]).then(employeeData => {
+        const intern = new Intern(employeeData.name, employeeData.id, employeeData.email, employeeData.school);
         employeeArr.push(intern);
         console.log(employeeArr);
 
-        if(internData.role === 'Engineer') {
+        if(employeeData.role === 'Engineer') {
             return promptEngineer();
-        } else if (internData.role === 'Intern') {
+        } else if (employeeData.role === 'Intern') {
             return promptIntern();
         } else {
-            return internData;
+            return employeeData;
         }
     });
 };
 
-const createHTML = () => {
-    console.log("Great job Connor!");
+const generateCards = employeeArr => {
+   for (i=0; i = employeeArr.length; i++) {
+    let role = employeeArr[i].getRole();
+
+       if(role === 'Manager') {
+           return `
+               <div class="card">
+                   <div class="card-body bg-info text-white ">
+                       <h3 class="card-title">${employeeArr[i].name}</h3>
+                       <h5>Manager</h5>
+                   </div>
+                   <div class="d-flex-inline p-3 card-text">
+                       <p>ID: ${employeeArr[i].id}</p>
+                       <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>
+                       <p>Office number: ${employeeArr[i].office}</p>
+                   </div>
+               </div>
+           `
+       } else if (role === 'Engineer') {
+           return `
+               <div class="card">
+                   <div class="card-body bg-info text-white ">
+                       <h3 class="card-title">${employeeArr[i].name}</h3>
+                       <h5>Engineer</h5>
+                   </div>
+                   <div class="d-flex-inline p-3 card-text">
+                       <p>ID: ${employeeArr[i].id}</p>
+                       <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>
+                       <a href = "https://github.com/${employeeArr[i].github}">GitHub Profile</a>
+                   </div>
+               </div>
+           `
+       } else {
+           return `
+               <div class="card">
+                   <div class="card-body bg-info text-white ">
+                       <h3 class="card-title">${employeeArr[i].name}</h3>
+                       <h5>Intern</h5>
+                   </div>
+                   <div class="d-flex-inline p-3 card-text">
+                       <p>ID: ${employeeArr[i].id}</p>
+                       <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>
+                       <p>School: ${employeeArr[i].school}</p>
+                   </div>
+               </div>
+           `
+       }
+       
+   }
+};
+
+const generatePage = employeeArr => {
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Team Profile</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+        <link rel="stylesheet" href="./src/style.css">
+    </head>
+    <body>
+        <header>
+            <h1 class="p-5 bg-secondary text-center align-middle text-white">My Team</h1>
+        </header>
+        <div class="d-flex justify-content-around">
+            <div class="card-deck justify-content-around col-11 text-center">
+                ${generateCards(employeeArr)}
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
 };
 
 
 promptManager()
-    .then(createHTML);
+    .then(employeeData => {
+        return generatePage(employeeData);
+    })
+    .then(pageHTML => {
+        return writeFile(pageHTML);
+    })
+    .then(writeFileResponse => {
+        console.log(writeFileResponse);
+        return copyFile();
+    })
+    .then(copyFileResponse => {
+        console.log(copyFileResponse);
+    })
+    .catch(err => {
+        console.log(err);
+    });
