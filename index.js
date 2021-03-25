@@ -1,12 +1,12 @@
+const fs = require('fs');
 const inquirer = require('inquirer');
-const { writeFile, copyFile } = require('./utils/generate-page.js');
-const Employee = require('./lib/Employee');
 const Manager = require('./lib/Manager');
 const Engineer = require('./lib/Engineer');
 const Intern = require('./lib/Intern');
-// const { exit } = require('process');
 
-let employeeArr = [];
+
+var employeeArr = [];
+// var htmlArr = [];
 
 const promptManager = () => {
     return inquirer.prompt([
@@ -71,7 +71,7 @@ const promptManager = () => {
     ]).then(employeeData => {
         const manager = new Manager(employeeData.name, employeeData.id, employeeData.email, employeeData.office);
         employeeArr.push(manager);
-        console.log(employeeArr);
+        console.log("=========== Manager added! ===========");
 
         if(employeeData.role === 'Engineer') {
             return promptEngineer();
@@ -146,7 +146,7 @@ const promptEngineer = () => {
     ]).then(employeeData => {
         const engineer = new Engineer(employeeData.name, employeeData.id, employeeData.email, employeeData.github);
         employeeArr.push(engineer);
-        console.log(employeeArr);
+        console.log("=========== Engineer added! ===========");
 
         if(employeeData.role === 'Engineer') {
             return promptEngineer();
@@ -221,7 +221,7 @@ const promptIntern = () => {
     ]).then(employeeData => {
         const intern = new Intern(employeeData.name, employeeData.id, employeeData.email, employeeData.school);
         employeeArr.push(intern);
-        console.log(employeeArr);
+        console.log("=========== Intern added! ===========");
 
         if(employeeData.role === 'Engineer') {
             return promptEngineer();
@@ -233,57 +233,10 @@ const promptIntern = () => {
     });
 };
 
-const generateCards = employeeArr => {
-   for (i=0; i = employeeArr.length; i++) {
-       if(role === 'Manager') {
-           return `
-               <div class="card">
-                   <div class="card-body bg-info text-white ">
-                       <h3 class="card-title">${employeeArr[i].name}</h3>
-                       <h5>Manager</h5>
-                   </div>
-                   <div class="d-flex-inline p-3 card-text">
-                       <p>ID: ${employeeArr[i].id}</p>
-                       <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>
-                       <p>Office number: ${employeeArr[i].office}</p>
-                   </div>
-               </div>
-           `
-       } else if (role === 'Engineer') {
-           return `
-               <div class="card">
-                   <div class="card-body bg-info text-white ">
-                       <h3 class="card-title">${employeeArr[i].name}</h3>
-                       <h5>Engineer</h5>
-                   </div>
-                   <div class="d-flex-inline p-3 card-text">
-                       <p>ID: ${employeeArr[i].id}</p>
-                       <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>
-                       <a href = "https://github.com/${employeeArr[i].github}">GitHub Profile</a>
-                   </div>
-               </div>
-           `
-       } else {
-           return `
-               <div class="card">
-                   <div class="card-body bg-info text-white ">
-                       <h3 class="card-title">${employeeArr[i].name}</h3>
-                       <h5>Intern</h5>
-                   </div>
-                   <div class="d-flex-inline p-3 card-text">
-                       <p>ID: ${employeeArr[i].id}</p>
-                       <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>
-                       <p>School: ${employeeArr[i].school}</p>
-                   </div>
-               </div>
-           `
-       }
-       
-   }
-};
 
-const generatePage = employeeArr => {
-    return `
+function generatePage() {
+    const html = [];
+    const startPage = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -292,37 +245,74 @@ const generatePage = employeeArr => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Team Profile</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-        <link rel="stylesheet" href="./src/style.css">
     </head>
+    <style>
+    .card-text a {
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    .card {
+        min-width: fit-content;
+        max-width: 35vw;
+        margin-top: 20px;
+    }
+    </style>
     <body>
         <header>
             <h1 class="p-5 bg-secondary text-center align-middle text-white">My Team</h1>
         </header>
         <div class="d-flex justify-content-around">
-            <div class="card-deck justify-content-around col-11 text-center">
-                ${generateCards(employeeArr)}
+            <div class="card-deck justify-content-around col-11 text-center">`
+
+    html.push(startPage);
+
+    for (let i=0; i < employeeArr.length; i++) {
+        let employeeRole = employeeArr[i].getRole();
+        let employeeCards = `
+            <div class="card">
+                <div class="card-body bg-info text-white ">
+                    <h3 class="card-title">${employeeArr[i].name}</h3>
+                    <h5>${employeeRole}</h5>
+                </div>
+                <div class="d-flex-inline p-3 card-text">
+                    <p>ID: ${employeeArr[i].id}</p>
+                    <a href = "mailto: ${employeeArr[i].email}">${employeeArr[i].email}</a>`
+
+        if (employeeRole === 'Manager') {
+            let managerOffice = employeeArr[i].getOffice();
+            employeeCards += `
+                    <p>Office number: ${managerOffice}</p>
+                </div>
+            </div>`
+        } else if (employeeRole === 'Engineer') {
+            let engineerGithub = employeeArr[i].getGitHub();
+            employeeCards += `
+                    <br><a href = "https://github.com/${engineerGithub}">GitHub Profile</a>
+                </div>
+            </div>`
+        } else {
+            let internSchool = employeeArr[i].getSchool();
+            employeeCards += `
+                    <p>School: ${internSchool}</p>
+                </div>
+            </div>`
+        }
+
+        html.push(employeeCards);
+    }
+    html.push(`
             </div>
         </div>
     </body>
-    </html>
-    `;
+    </html>`);
+
+    fs.writeFile('./dist/index.html', html.join(''), err => {
+        console.log('=========== HTML file created! ===========')
+    });
 };
 
 
 promptManager()
     .then(employeeData => {
         return generatePage(employeeData);
-    })
-    .then(pageHTML => {
-        return writeFile(pageHTML);
-    })
-    .then(writeFileResponse => {
-        console.log(writeFileResponse);
-        return copyFile();
-    })
-    .then(copyFileResponse => {
-        console.log(copyFileResponse);
-    })
-    .catch(err => {
-        console.log(err);
     });
