@@ -235,8 +235,6 @@ const promptIntern = () => {
 
 const generateCards = employeeArr => {
    for (i=0; i = employeeArr.length; i++) {
-    let role = employeeArr[i].getRole();
-
        if(role === 'Manager') {
            return `
                <div class="card">
